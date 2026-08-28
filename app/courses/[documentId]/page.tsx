@@ -3,6 +3,8 @@
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, readError } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
+import { canManageCourse } from '@/lib/permissions';
 import { Course } from '@/lib/types';
 
 export default function CourseDetailPage({
@@ -10,6 +12,7 @@ export default function CourseDetailPage({
 }: PageProps<'/courses/[documentId]'>) {
   // params is a Promise in this version of Next, unwrapped with React's use().
   const { documentId } = use(params);
+  const { user } = useAuth();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'missing' | 'failed'>(
@@ -78,7 +81,21 @@ export default function CourseDetailPage({
         ← All courses
       </Link>
 
-      <h1 className="mt-4 text-2xl font-semibold">{course.title}</h1>
+      <div className="mt-4 flex items-start justify-between gap-4">
+        <h1 className="text-2xl font-semibold">{course.title}</h1>
+
+        {/* Shown to whoever may manage this course. Hiding it from everyone else
+            is tidiness, not access control — Strapi refuses the request either
+            way. */}
+        {canManageCourse(user, course.instructor?.id) && (
+          <Link
+            href={`/manage/courses/${course.documentId}/edit`}
+            className="shrink-0 rounded border border-gray-300 px-3 py-1.5 text-sm"
+          >
+            Edit course
+          </Link>
+        )}
+      </div>
 
       {course.instructor && (
         <p className="mt-1 text-sm text-gray-600">

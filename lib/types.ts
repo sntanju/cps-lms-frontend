@@ -20,3 +20,13 @@ export type Course = {
   coverImageUrl: string | null;
   instructor: Instructor | null;
 };
+
+// An account a course may be assigned to, from GET /api/course-instructors.
+// Only Admin and Content Manager can read that list, because only they may
+// assign a course to somebody other than themselves.
+export type AssignableInstructor = {
+  id: number;
+  fullName: string;
+  email: string;
+  role: string;
+};
