@@ -15,7 +15,7 @@ export default function DashboardPage() {
     <main className="mx-auto w-full max-w-2xl p-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Welcome, {user.username}</h1>
+          <h1 className="text-2xl font-semibold">Welcome, {user.fullName}</h1>
           <p className="mt-1 text-sm text-gray-600">
             Signed in as {user.email} — role: <strong>{user.role}</strong>
           </p>

@@ -24,9 +24,20 @@ export type Role = 'Admin' | 'Content Manager' | 'Instructor' | 'Student';
 
 export type AuthUser = {
   id: number;
-  username: string;
+  fullName: string;
   email: string;
   role: Role;
+};
+
+// What GET /api/auth/me actually returns. The role arrives as an object, so it
+// is flattened to its name below — every consumer then just compares strings.
+type MeResponse = {
+  data: {
+    id: number;
+    fullName: string;
+    email: string;
+    role: { id: number; name: string } | null;
+  };
 };
 
 type Status = 'loading' | 'authenticated' | 'unauthenticated';
@@ -57,9 +68,24 @@ async function fetchMe(): Promise<AuthUser | null> {
     throw new Error(await readError(response, 'Could not load your account'));
   }
 
-  const body = await response.json();
+  const { data }: MeResponse = await response.json();
 
-  return body.data;
+  // Every account made through registration or the seeder has a role. One without
+  // it cannot do anything here, so say so instead of rendering a broken page.
+  if (!data.role) {
+    throw new Error(
+      'Your account has no role assigned. Contact an administrator.',
+    );
+  }
+
+  return {
+    id: data.id,
+    fullName: data.fullName,
+    email: data.email,
+    // Cast: the database can hold roles outside the four LMS ones — Strapi's own
+    // 'Authenticated', for instance. Such a user simply matches no guard.
+    role: data.role.name as Role,
+  };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -157,10 +183,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       if (refreshToken) {
-        await apiFetch('/api/auth/logout', {
+        const response = await apiFetch('/api/auth/logout', {
           method: 'POST',
           body: JSON.stringify({ refreshToken }),
         });
+
+        // If the access token had expired, apiFetch refreshed mid-call — and a
+        // refresh rotates, so the token in the body above is already revoked and
+        // the server never ended the new session. Send the current one.
+        const rotated = getRefreshToken();
+
+        if (!response.ok && rotated && rotated !== refreshToken) {
+          await apiFetch('/api/auth/logout', {
+            method: 'POST',
+            body: JSON.stringify({ refreshToken: rotated }),
+          });
+        }
       }
     } catch (error) {
       // Revoking the session server-side is best effort. Whatever happens, the

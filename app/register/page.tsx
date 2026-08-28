@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, status } = useAuth();
   const router = useRouter();
 
   const [name, setName] = useState('');
@@ -15,6 +15,14 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Registration signs the new user straight in, so the same effect covers both
+  // landing here while already signed in and leaving after a successful signup.
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/dashboard');
+    }
+  }, [status, router]);
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError('');
@@ -22,11 +30,18 @@ export default function RegisterPage() {
 
     try {
       await register(name, email, password);
-      router.replace('/dashboard');
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Registration failed');
       setSubmitting(false);
     }
+  }
+
+  if (status !== 'unauthenticated') {
+    return (
+      <main className="mx-auto w-full max-w-sm p-8">
+        <p className="text-sm text-gray-500">Loading…</p>
+      </main>
+    );
   }
 
   return (

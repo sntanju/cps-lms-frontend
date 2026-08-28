@@ -1,12 +1,12 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
 function LoginForm() {
-  const { login } = useAuth();
+  const { login, status } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -24,6 +24,15 @@ function LoginForm() {
       ? redirectTo
       : '/dashboard';
 
+  // Handles both cases in one place: a user who is already signed in has no
+  // business on this form, and a user who just signed in needs sending onward.
+  // One navigation path rather than two racing each other.
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace(destination);
+    }
+  }, [status, destination, router]);
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError('');
@@ -31,11 +40,16 @@ function LoginForm() {
 
     try {
       await login(email, password);
-      router.replace(destination);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Login failed');
       setSubmitting(false);
     }
+  }
+
+  // Covers 'loading' (auth state not known yet) and 'authenticated' (the effect
+  // above is on its way out), so the form never flashes at a signed-in user.
+  if (status !== 'unauthenticated') {
+    return <p className="text-sm text-gray-500">Loading…</p>;
   }
 
   return (
