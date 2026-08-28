@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { apiFetch, readError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { canManageCourse } from '@/lib/permissions';
-import { Course } from '@/lib/types';
+import { Course, Lesson } from '@/lib/types';
+
+function byOrder(lessons: Lesson[]) {
+  return [...lessons].sort((a, b) => a.order - b.order);
+}
 
 export default function CourseDetailPage({
   params,
@@ -23,10 +27,13 @@ export default function CourseDetailPage({
   useEffect(() => {
     async function loadCourse() {
       try {
-        const response = await apiFetch(`/api/courses/${documentId}`);
+        // ?populate=lessons brings the lesson list along in the same request.
+        
+        const response = await apiFetch(
+          `/api/courses/${documentId}?populate=lessons`,
+        );
 
-        // A course that does not exist is an expected outcome of a typed or
-        // stale URL, so it gets its own state rather than an error banner.
+        
         if (response.status === 404) {
           setStatus('missing');
           return;
@@ -75,6 +82,8 @@ export default function CourseDetailPage({
     );
   }
 
+  const lessons = byOrder(course.lessons ?? []);
+
   return (
     <main className="mx-auto w-full max-w-3xl p-8">
       <Link href="/courses" className="text-sm text-gray-500 hover:underline">
@@ -84,16 +93,22 @@ export default function CourseDetailPage({
       <div className="mt-4 flex items-start justify-between gap-4">
         <h1 className="text-2xl font-semibold">{course.title}</h1>
 
-        {/* Shown to whoever may manage this course. Hiding it from everyone else
-            is tidiness, not access control — Strapi refuses the request either
-            way. */}
+        
         {canManageCourse(user, course.instructor?.id) && (
-          <Link
-            href={`/manage/courses/${course.documentId}/edit`}
-            className="shrink-0 rounded border border-gray-300 px-3 py-1.5 text-sm"
-          >
-            Edit course
-          </Link>
+          <div className="flex shrink-0 gap-2">
+            <Link
+              href={`/manage/courses/${course.documentId}/lessons`}
+              className="rounded border border-gray-300 px-3 py-1.5 text-sm"
+            >
+              Manage lessons
+            </Link>
+            <Link
+              href={`/manage/courses/${course.documentId}/edit`}
+              className="rounded border border-gray-300 px-3 py-1.5 text-sm"
+            >
+              Edit course
+            </Link>
+          </div>
         )}
       </div>
 
@@ -109,7 +124,35 @@ export default function CourseDetailPage({
         </p>
       )}
 
-      {/* Lessons land here in Phase 3, and the enroll button in Phase 4. */}
+      <section className="mt-8">
+        <h2 className="text-lg font-semibold">Lessons</h2>
+
+        {lessons.length === 0 && (
+          <p className="mt-2 text-sm text-gray-600">
+            This course does not have any lessons yet.
+          </p>
+        )}
+
+        {lessons.length > 0 && (
+          <ol className="mt-3 divide-y divide-gray-100 border-y border-gray-100">
+            {lessons.map((lesson) => (
+              <li key={lesson.documentId}>
+                <Link
+                  href={`/courses/${course.documentId}/lessons/${lesson.documentId}`}
+                  className="flex items-baseline gap-3 py-3 hover:underline"
+                >
+                  <span className="w-6 text-sm text-gray-500">{lesson.order}</span>
+                  <span className="font-medium">{lesson.title}</span>
+                  {lesson.videoUrl && (
+                    <span className="text-xs text-gray-500">Video</span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
     </main>
   );
 }

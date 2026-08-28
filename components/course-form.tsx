@@ -15,8 +15,7 @@ export type CourseFormValues = {
   instructorId: number | null;
 };
 
-// Shared by the new and edit pages, which differ only in where the initial
-// values come from and which request they send.
+
 export function CourseForm({
   initialValues,
   submitLabel,
@@ -36,8 +35,7 @@ export function CourseForm({
   const showPicker = canAssignInstructor(user);
 
   useEffect(() => {
-    // Only Admin and Content Manager can read this list — an Instructor asking
-    // for it would get a 403, so do not ask.
+    // Only Admin and Content Manager can read this list — an Instructor asking for it would get a 403, so do not ask.
     if (!showPicker) {
       return;
     }
@@ -70,9 +68,7 @@ export function CourseForm({
     try {
       await onSubmit(values);
     } catch (submitError) {
-      // Whatever the backend said — including a 403 when the ownership policy
-      // refuses. Showing it is the point: the guard in the UI is not what stops
-      // this, the policy is.
+      
       setError(
         submitError instanceof Error ? submitError.message : 'Could not save this course',
       );
@@ -168,8 +164,7 @@ export function CourseForm({
   );
 }
 
-// Sends the form to Strapi. Shared so the new and edit pages agree on the
-// request shape and on how a failure turns into a message.
+// Sends the form to Strapi. Shared so the new and edit pages agree on the request shape and on how a failure turns into a message.
 export async function saveCourse(
   path: string,
   method: 'POST' | 'PUT',
@@ -181,8 +176,7 @@ export async function saveCourse(
     coverImageUrl: values.coverImageUrl.trim() || null,
   };
 
-  // Omitted entirely when nothing was picked, so the backend applies its own
-  // rule (the creator owns it) rather than being handed a null to interpret.
+  
   if (values.instructorId !== null) {
     data.instructor = values.instructorId;
   }

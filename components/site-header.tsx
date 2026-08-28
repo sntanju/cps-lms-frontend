@@ -3,9 +3,6 @@
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 
-// The app-wide navigation bar. Which links appear depends on the signed-in role,
-// but that is presentation only — every page behind these links is guarded by
-// RequireAuth, and every request behind it is checked again by Strapi.
 export function SiteHeader() {
   const { user, status, logout } = useAuth();
 
@@ -17,9 +14,7 @@ export function SiteHeader() {
         </Link>
 
         <div className="flex items-center gap-4 text-sm">
-          {/* Auth state is only known after hydration, so render nothing
-              decisive until it resolves — otherwise the header flickers from
-              signed-out to signed-in on every page load. */}
+      
           {status === 'loading' && <span className="text-gray-500">…</span>}
 
           {status === 'unauthenticated' && (

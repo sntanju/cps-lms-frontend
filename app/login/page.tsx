@@ -17,16 +17,14 @@ function LoginForm() {
 
   // Only accept a path back into this app. Sending the user to an arbitrary
   // ?redirect= value would be an open redirect. '//evil.com' is a protocol
-  // relative URL, so checking for a leading '/' alone is not enough.
+  
   const redirectTo = searchParams.get('redirect');
   const destination =
     redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
       ? redirectTo
       : '/dashboard';
 
-  // Handles both cases in one place: a user who is already signed in has no
-  // business on this form, and a user who just signed in needs sending onward.
-  // One navigation path rather than two racing each other.
+  
   useEffect(() => {
     if (status === 'authenticated') {
       router.replace(destination);
@@ -46,8 +44,7 @@ function LoginForm() {
     }
   }
 
-  // Covers 'loading' (auth state not known yet) and 'authenticated' (the effect
-  // above is on its way out), so the form never flashes at a signed-in user.
+  
   if (status !== 'unauthenticated') {
     return <p className="text-sm text-gray-500">Loading…</p>;
   }
@@ -105,8 +102,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <main className="mx-auto w-full max-w-sm p-8">
-      {/* useSearchParams needs a Suspense boundary, or the production build
-          fails with "Missing Suspense boundary with useSearchParams". */}
+      
       <Suspense fallback={<p className="text-sm text-gray-500">Loading…</p>}>
         <LoginForm />
       </Suspense>

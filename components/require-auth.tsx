@@ -4,12 +4,7 @@ import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Role, useAuth } from '@/lib/auth-context';
 
-// Gates a page on being signed in, and optionally on holding one of `roles`.
-//
-// This is UX only. The tokens live in localStorage, so the Next.js server never
-// sees them and cannot redirect in proxy.ts — and more importantly, a guard in
-// the browser is not security. Every rule here is also enforced by Strapi, which
-// is what actually stops a student from reaching an instructor's data.
+
 export function RequireAuth({
   roles,
   children,
@@ -28,8 +23,7 @@ export function RequireAuth({
     }
   }, [status, pathname, router]);
 
-  // Auth state is only known after hydration. Redirecting during 'loading' would
-  // bounce signed-in users to the login page on every refresh.
+  // Auth state is only known after hydration. Redirecting during 'loading' would bounce signed-in users to the login page on every refresh.
   if (status === 'loading') {
     return <p className="p-8 text-sm text-gray-500">Loading…</p>;
   }
@@ -38,8 +32,7 @@ export function RequireAuth({
     return null;
   }
 
-  // Signed in but with the wrong role: say so rather than redirect, so the user
-  // understands what happened instead of being bounced somewhere unexplained.
+  // Signed in but with the wrong role: say so rather than redirect, so the user understands what happened instead of being bounced somewhere unexplained.
   if (roles && !roles.includes(user.role)) {
     return (
       <div className="p-8">

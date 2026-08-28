@@ -8,6 +8,22 @@ export type Instructor = {
   fullName: string;
 };
 
+// One unit of a course. `content` and `videoUrl` are two separate optional
+// fields rather than one polymorphic field plus a type flag: the spec says
+// content is "text or a video URL", and keeping them apart means nothing has to
+// branch on a type enum, and an author can attach a video *and* notes.
+export type Lesson = {
+  id: number;
+  documentId: string;
+  title: string;
+  content: string | null;
+  videoUrl: string | null;
+  // Set by the author, defaulted by the backend to (lesson count + 1). Lessons
+  // are always read in this order; the numbers may have gaps after a delete and
+  // that is fine, nothing depends on them being contiguous.
+  order: number;
+};
+
 export type Course = {
   // Strapi 5 addresses entries by documentId in URLs (/api/courses/:documentId),
   // but relation fields still take the numeric id. Both are kept because both
@@ -19,6 +35,9 @@ export type Course = {
   description: string | null;
   coverImageUrl: string | null;
   instructor: Instructor | null;
+  // Only present when the request asked for ?populate[lessons]=true, which the
+  // course detail page does. Absent everywhere else, hence optional.
+  lessons?: Lesson[];
 };
 
 // An account a course may be assigned to, from GET /api/course-instructors.

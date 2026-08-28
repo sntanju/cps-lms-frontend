@@ -15,8 +15,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Registration signs the new user straight in, so the same effect covers both
-  // landing here while already signed in and leaving after a successful signup.
+  
   useEffect(() => {
     if (status === 'authenticated') {
       router.replace('/dashboard');
@@ -83,16 +82,14 @@ export default function RegisterPage() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
-            /* Mirrors the backend rule in src/api/auth/services/auth.ts. The
-               server stays the authority; this just avoids a wasted request. */
+            
             minLength={8}
             className="rounded border border-gray-300 p-2"
           />
           <span className="text-xs text-gray-500">At least 8 characters.</span>
         </label>
 
-        {/* No role picker: every self-registration becomes a Student. The
-            backend hardcodes it, since assigning roles is Admin-only. */}
+        
 
         <button
           type="submit"

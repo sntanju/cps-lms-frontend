@@ -13,9 +13,7 @@ export default function CoursesPage() {
   useEffect(() => {
     async function loadCourses() {
       try {
-        // No populate parameter for the instructor: the API attaches it already,
-        // because a populated user relation gets stripped by Strapi's content
-        // API sanitizer. See src/api/course/controllers/course.ts in the backend.
+       
         const response = await apiFetch('/api/courses?sort=createdAt:desc');
 
         if (!response.ok) {
@@ -28,8 +26,7 @@ export default function CoursesPage() {
         setCourses(body.data);
         setStatus('ready');
       } catch {
-        // A thrown fetch means the network failed or the API is unreachable —
-        // distinct from the API answering with an error above.
+        
         setError('Could not reach the server. Is the backend running?');
         setStatus('failed');
       }
@@ -55,8 +52,7 @@ export default function CoursesPage() {
         </p>
       )}
 
-      {/* An empty catalogue is a normal state, not an error — say so rather
-          than rendering a blank page. */}
+      
       {status === 'ready' && courses.length === 0 && (
         <p className="mt-6 text-sm text-gray-600">No courses yet.</p>
       )}

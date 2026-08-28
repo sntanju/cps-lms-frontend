@@ -13,15 +13,11 @@ export default function ManageCoursesPage() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [error, setError] = useState('');
   const [deleting, setDeleting] = useState<string | null>(null);
-  // Bumped after a delete to re-run the effect below. Re-reading from the server
-  // beats splicing local state: the server decides what this user may see.
+  
   const [reloadCount, setReloadCount] = useState(0);
 
   useEffect(() => {
-    // GET /api/managed-courses rather than the catalogue with a filter: the
-    // backend scopes this list from the token, so an Instructor gets their own
-    // courses and an Admin or Content Manager gets all of them. The client
-    // cannot widen it by editing a query string.
+    
     async function loadCourses() {
       try {
         const response = await apiFetch('/api/managed-courses');
@@ -45,8 +41,7 @@ export default function ManageCoursesPage() {
   }, [reloadCount]);
 
   async function handleDelete(course: Course) {
-    // A destructive action behind one click is a bad look in a demo, and worse
-    // in use.
+    
     if (!window.confirm(`Delete "${course.title}"? This cannot be undone.`)) {
       return;
     }
@@ -132,6 +127,12 @@ export default function ManageCoursesPage() {
                   {course.instructor?.fullName ?? '—'}
                 </td>
                 <td className="py-3 text-right">
+                  <Link
+                    href={`/manage/courses/${course.documentId}/lessons`}
+                    className="mr-4 hover:underline"
+                  >
+                    Lessons
+                  </Link>
                   <Link
                     href={`/manage/courses/${course.documentId}/edit`}
                     className="mr-4 hover:underline"

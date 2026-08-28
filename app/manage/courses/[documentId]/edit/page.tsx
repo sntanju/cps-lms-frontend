@@ -81,10 +81,6 @@ export default function EditCoursePage({
         </p>
       )}
 
-      {/* The form renders for anyone who can reach this URL — including an
-          instructor who does not own this course. Saving is what fails, with the
-          403 from the ownership policy shown in the form. That is deliberate:
-          the backend is the gate, not this page. */}
       {status === 'ready' && initialValues && (
         <CourseForm
           initialValues={initialValues}
