@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, readError } from '@/lib/api';
-import { Course, Lesson } from '@/lib/types';
+import { CourseLessons, Lesson } from '@/lib/types';
 
 
 function byOrder(lessons: Lesson[]) {
@@ -15,7 +15,7 @@ export default function ManageLessonsPage({
 }: PageProps<'/manage/courses/[documentId]/lessons'>) {
   const { documentId } = use(params);
 
-  const [course, setCourse] = useState<Course | null>(null);
+  const [course, setCourse] = useState<CourseLessons | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'missing' | 'failed'>(
     'loading',
   );
@@ -28,7 +28,8 @@ export default function ManageLessonsPage({
     
     async function loadCourse() {
       try {
-        const response = await apiFetch(`/api/courses/${documentId}?populate=lessons`);
+        
+        const response = await apiFetch(`/api/courses/${documentId}/lessons`);
 
         if (response.status === 404) {
           setStatus('missing');
@@ -41,8 +42,9 @@ export default function ManageLessonsPage({
           return;
         }
 
+        // { data: lessons, meta: { course } }
         const body = await response.json();
-        setCourse(body.data);
+        setCourse({ course: body.meta.course, lessons: body.data });
         setStatus('ready');
       } catch {
         setError('Could not reach the server. Is the backend running?');
@@ -104,7 +106,7 @@ export default function ManageLessonsPage({
     );
   }
 
-  const lessons = byOrder(course.lessons ?? []);
+  const lessons = byOrder(course.lessons);
 
   return (
     <main className="mx-auto w-full max-w-4xl p-8">
@@ -115,11 +117,11 @@ export default function ManageLessonsPage({
       <div className="mt-4 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Lessons</h1>
-          <p className="mt-1 text-sm text-gray-600">{course.title}</p>
+          <p className="mt-1 text-sm text-gray-600">{course.course.title}</p>
         </div>
 
         <Link
-          href={`/manage/courses/${course.documentId}/lessons/new`}
+          href={`/manage/courses/${course.course.documentId}/lessons/new`}
           className="shrink-0 rounded bg-black px-4 py-2 text-sm text-white"
         >
           Add lesson
@@ -154,7 +156,7 @@ export default function ManageLessonsPage({
                 <td className="py-3 text-gray-500">{lesson.order}</td>
                 <td className="py-3">
                   <Link
-                    href={`/courses/${course.documentId}/lessons/${lesson.documentId}`}
+                    href={`/courses/${course.course.documentId}/lessons/${lesson.documentId}`}
                     className="font-medium hover:underline"
                   >
                     {lesson.title}
@@ -167,7 +169,7 @@ export default function ManageLessonsPage({
                 </td>
                 <td className="py-3 text-right">
                   <Link
-                    href={`/manage/courses/${course.documentId}/lessons/${lesson.documentId}/edit`}
+                    href={`/manage/courses/${course.course.documentId}/lessons/${lesson.documentId}/edit`}
                     className="mr-4 hover:underline"
                   >
                     Edit

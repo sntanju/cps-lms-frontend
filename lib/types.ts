@@ -42,3 +42,8 @@ export type Enrollment = {
   enrolledAt: string;
   course: Course;
 };
+
+export type CourseLessons = {
+  course: { documentId: string; title: string };
+  lessons: Lesson[];
+};

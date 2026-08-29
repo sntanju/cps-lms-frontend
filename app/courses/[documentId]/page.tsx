@@ -30,11 +30,8 @@ export default function CourseDetailPage({
   useEffect(() => {
     async function loadCourse() {
       try {
-        // ?populate=lessons brings the lesson list along in the same request.
         
-        const response = await apiFetch(
-          `/api/courses/${documentId}?populate=lessons`,
-        );
+        const response = await apiFetch(`/api/courses/${documentId}`);
 
         
         if (response.status === 404) {
@@ -134,6 +131,8 @@ export default function CourseDetailPage({
   }
 
   const lessons = byOrder(course.lessons ?? []);
+  // Mirrors canAccessContent on the backend: enrolled students, plus anyone who could manage the course.
+  const canOpenLessons = enrolled || canManageCourse(user, course.instructor?.id);
 
   return (
     <main className="mx-auto w-full max-w-3xl p-8">
@@ -220,21 +219,32 @@ export default function CourseDetailPage({
 
         {lessons.length > 0 && (
           <ol className="mt-3 divide-y divide-gray-100 border-y border-gray-100">
-            {lessons.map((lesson) => (
+            {lessons.map((lesson, index) => (
               <li key={lesson.documentId}>
-                <Link
-                  href={`/courses/${course.documentId}/lessons/${lesson.documentId}`}
-                  className="flex items-baseline gap-3 py-3 hover:underline"
-                >
-                  <span className="w-6 text-sm text-gray-500">{lesson.order}</span>
-                  <span className="font-medium">{lesson.title}</span>
-                  {lesson.videoUrl && (
-                    <span className="text-xs text-gray-500">Video</span>
-                  )}
-                </Link>
+                
+                {canOpenLessons ? (
+                  <Link
+                    href={`/courses/${course.documentId}/lessons/${lesson.documentId}`}
+                    className="flex items-baseline gap-3 py-3 hover:underline"
+                  >
+                    <span className="w-6 text-sm text-gray-500">{index + 1}</span>
+                    <span className="font-medium">{lesson.title}</span>
+                  </Link>
+                ) : (
+                  <div className="flex items-baseline gap-3 py-3 text-gray-600">
+                    <span className="w-6 text-sm text-gray-500">{index + 1}</span>
+                    <span>{lesson.title}</span>
+                  </div>
+                )}
               </li>
             ))}
           </ol>
+        )}
+
+        {lessons.length > 0 && !canOpenLessons && isStudent && (
+          <p className="mt-3 text-sm text-gray-600">
+            Enrol in this course to read its lessons.
+          </p>
         )}
       </section>
 
