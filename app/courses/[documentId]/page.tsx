@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { apiFetch, readError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { canManageCourse } from '@/lib/permissions';
-import { Course, Lesson } from '@/lib/types';
+import { Course, Enrollment, Lesson } from '@/lib/types';
 
 function byOrder(lessons: Lesson[]) {
   return [...lessons].sort((a, b) => a.order - b.order);
@@ -14,11 +14,14 @@ function byOrder(lessons: Lesson[]) {
 export default function CourseDetailPage({
   params,
 }: PageProps<'/courses/[documentId]'>) {
-  // params is a Promise in this version of Next, unwrapped with React's use().
+  
   const { documentId } = use(params);
   const { user } = useAuth();
 
   const [course, setCourse] = useState<Course | null>(null);
+  const [enrolled, setEnrolled] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [enrollError, setEnrollError] = useState('');
   const [status, setStatus] = useState<'loading' | 'ready' | 'missing' | 'failed'>(
     'loading',
   );
@@ -56,6 +59,54 @@ export default function CourseDetailPage({
 
     loadCourse();
   }, [documentId]);
+
+  const isStudent = user?.role === 'Student';
+
+  useEffect(() => {
+    // Only a Student can enrol, so only a Student needs to know whether they already have. Anyone else would get a 403 from this endpoint.
+    if (!isStudent) {
+      return;
+    }
+
+    async function loadEnrollment() {
+      const response = await apiFetch('/api/enrollments/mine');
+
+      if (!response.ok) {
+        return;
+      }
+
+      const body: { data: Enrollment[] } = await response.json();
+      setEnrolled(
+        body.data.some((enrollment) => enrollment.course.documentId === documentId),
+      );
+    }
+
+    loadEnrollment();
+  }, [documentId, isStudent]);
+
+  async function handleEnroll() {
+    setEnrolling(true);
+    setEnrollError('');
+
+    try {
+      const response = await apiFetch('/api/enrollments/enroll', {
+        method: 'POST',
+        body: JSON.stringify({ courseId: documentId }),
+      });
+
+      if (!response.ok) {
+        setEnrollError(await readError(response, 'Could not enrol'));
+        setEnrolling(false);
+        return;
+      }
+
+      setEnrolled(true);
+    } catch {
+      setEnrollError('Could not reach the server. Is the backend running?');
+    }
+
+    setEnrolling(false);
+  }
 
   if (status === 'loading') {
     return <p className="mx-auto w-full max-w-3xl p-8 text-sm text-gray-500">Loading…</p>;
@@ -122,6 +173,40 @@ export default function CourseDetailPage({
         <p className="mt-4 whitespace-pre-wrap text-gray-700">
           {course.description}
         </p>
+      )}
+
+      {isStudent && (
+        <div className="mt-6 rounded border border-gray-200 p-4">
+          {enrollError && (
+            <p className="mb-3 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {enrollError}
+            </p>
+          )}
+
+          {enrolled ? (
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm font-medium">You are enrolled</p>
+
+              {lessons.length > 0 && (
+                <Link
+                  href={`/courses/${course.documentId}/lessons/${lessons[0].documentId}`}
+                  className="rounded bg-black px-4 py-2 text-sm text-white"
+                >
+                  Start the first lesson
+                </Link>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={handleEnroll}
+              // Disabled while the request is in flight, so a double-click cannot send a second enrolment.
+              disabled={enrolling}
+              className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+            >
+              {enrolling ? 'Enrolling…' : 'Enrol in this course'}
+            </button>
+          )}
+        </div>
       )}
 
       <section className="mt-8">

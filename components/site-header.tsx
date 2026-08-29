@@ -40,6 +40,12 @@ export function SiteHeader() {
                 Dashboard
               </Link>
 
+              {user.role === 'Student' && (
+                <Link href="/my-courses" className="hover:underline">
+                  My Courses
+                </Link>
+              )}
+
               {(user.role === 'Admin' ||
                 user.role === 'Content Manager' ||
                 user.role === 'Instructor') && (
