@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, readError } from '@/lib/api';
 import { Enrollment } from '@/lib/types';
+import { ProgressBar } from '@/components/progress-bar';
 
 export default function MyCoursesPage() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -87,7 +88,13 @@ export default function MyCoursesPage() {
                 </p>
               )}
 
-              {/* progress bar will be here. */}
+              <div className="mt-4">
+                <ProgressBar
+                  completed={enrollment.progress.completed}
+                  total={enrollment.progress.total}
+                  percentage={enrollment.progress.percentage}
+                />
+              </div>
             </li>
           ))}
         </ul>

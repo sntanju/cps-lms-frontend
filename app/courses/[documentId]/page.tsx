@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { apiFetch, readError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { canManageCourse } from '@/lib/permissions';
-import { Course, Enrollment, Lesson } from '@/lib/types';
+import { Course, CourseProgress, Enrollment, Lesson } from '@/lib/types';
+import { ProgressBar } from '@/components/progress-bar';
 
 function byOrder(lessons: Lesson[]) {
   return [...lessons].sort((a, b) => a.order - b.order);
@@ -22,6 +23,7 @@ export default function CourseDetailPage({
   const [enrolled, setEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState('');
+  const [progress, setProgress] = useState<CourseProgress | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'missing' | 'failed'>(
     'loading',
   );
@@ -80,6 +82,25 @@ export default function CourseDetailPage({
 
     loadEnrollment();
   }, [documentId, isStudent]);
+
+  useEffect(() => {
+    // Only meaningful once enrolled; before that the endpoint answers 403.
+    if (!enrolled) {
+      return;
+    }
+
+    async function loadProgress() {
+      const response = await apiFetch(`/api/courses/${documentId}/progress`);
+
+      if (!response.ok) {
+        return;
+      }
+
+      setProgress((await response.json()).data);
+    }
+
+    loadProgress();
+  }, [documentId, enrolled]);
 
   async function handleEnroll() {
     setEnrolling(true);
@@ -183,8 +204,9 @@ export default function CourseDetailPage({
           )}
 
           {enrolled ? (
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-sm font-medium">You are enrolled</p>
+            <div>
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-sm font-medium">You are enrolled</p>
 
               {lessons.length > 0 && (
                 <Link
@@ -193,6 +215,17 @@ export default function CourseDetailPage({
                 >
                   Start the first lesson
                 </Link>
+                )}
+              </div>
+
+              {progress && (
+                <div className="mt-4">
+                  <ProgressBar
+                    completed={progress.completed}
+                    total={progress.total}
+                    percentage={progress.percentage}
+                  />
+                </div>
               )}
             </div>
           ) : (
@@ -229,6 +262,9 @@ export default function CourseDetailPage({
                   >
                     <span className="w-6 text-sm text-gray-500">{index + 1}</span>
                     <span className="font-medium">{lesson.title}</span>
+                    {progress?.completedLessonIds.includes(lesson.documentId) && (
+                      <span className="text-sm text-green-700">✓</span>
+                    )}
                   </Link>
                 ) : (
                   <div className="flex items-baseline gap-3 py-3 text-gray-600">

@@ -1,16 +1,22 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, readError } from '@/lib/api';
-import { CourseLessons } from '@/lib/types';
+import { CourseLessons, CourseProgress } from '@/lib/types';
+import { ProgressBar } from '@/components/progress-bar';
+import { useAuth } from '@/lib/auth-context';
 
 export default function LessonPage({
   params,
 }: PageProps<'/courses/[documentId]/lessons/[lessonDocumentId]'>) {
   const { documentId, lessonDocumentId } = use(params);
 
+  const { user } = useAuth();
+
   const [data, setData] = useState<CourseLessons | null>(null);
+  const [progress, setProgress] = useState<CourseProgress | null>(null);
+  const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<
     'loading' | 'ready' | 'forbidden' | 'missing' | 'failed'
   >('loading');
@@ -49,6 +55,46 @@ export default function LessonPage({
 
     loadLessons();
   }, [documentId]);
+
+  const isStudent = user?.role === 'Student';
+
+  const loadProgress = useCallback(async () => {
+    const response = await apiFetch(`/api/courses/${documentId}/progress`);
+
+    if (!response.ok) {
+      return;
+    }
+
+    setProgress((await response.json()).data);
+  }, [documentId]);
+
+  useEffect(() => {
+    if (!isStudent) {
+      return;
+    }
+
+    async function load() {
+      await loadProgress();
+    }
+
+    load();
+  }, [isStudent, loadProgress]);
+
+  async function toggleComplete(completed: boolean) {
+    setSaving(true);
+
+    await apiFetch(
+      completed
+        ? `/api/lesson-completions/complete/${lessonDocumentId}`
+        : '/api/lesson-completions/complete',
+      completed
+        ? { method: 'DELETE' }
+        : { method: 'POST', body: JSON.stringify({ lessonId: lessonDocumentId }) },
+    );
+
+    await loadProgress();
+    setSaving(false);
+  }
 
   if (status === 'loading') {
     return <p className="mx-auto w-full max-w-5xl p-8 text-sm text-gray-500">Loading…</p>;
@@ -99,6 +145,8 @@ export default function LessonPage({
   const lesson = data.lessons[index];
   const previous = index > 0 ? data.lessons[index - 1] : null;
   const next = index < data.lessons.length - 1 ? data.lessons[index + 1] : null;
+  const completedIds = progress?.completedLessonIds ?? [];
+  const isComplete = completedIds.includes(lessonDocumentId);
 
   
   if (!lesson) {
@@ -122,8 +170,18 @@ export default function LessonPage({
       </Link>
 
       <div className="mt-4 grid gap-8 sm:grid-cols-[220px_1fr]">
-        {/* The sequence, so "in sequence" is visible rather than implied. */}
+        
         <nav className="order-2 sm:order-1">
+          {progress && (
+            <div className="mb-4">
+              <ProgressBar
+                completed={progress.completed}
+                total={progress.total}
+                percentage={progress.percentage}
+              />
+            </div>
+          )}
+
           <h2 className="text-xs font-medium uppercase tracking-wide text-gray-500">
             Lessons
           </h2>
@@ -138,6 +196,9 @@ export default function LessonPage({
                       : 'block rounded px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-50'
                   }
                 >
+                  {completedIds.includes(item.documentId) && (
+                    <span className="mr-1 text-green-700">✓</span>
+                  )}
                   {itemIndex + 1}. {item.title}
                 </Link>
               </li>
@@ -170,7 +231,20 @@ export default function LessonPage({
             <p className="mt-6 text-sm text-gray-600">This lesson has no content yet.</p>
           )}
 
-          {/* "Mark complete" will write here. */}
+          {isStudent && (
+            <button
+              onClick={() => toggleComplete(isComplete)}
+              // Disabled in flight, so a double-click cannot fire two requests.
+              disabled={saving}
+              className={
+                isComplete
+                  ? 'mt-8 rounded border border-green-600 px-4 py-2 text-sm text-green-700 disabled:opacity-50'
+                  : 'mt-8 rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50'
+              }
+            >
+              {saving ? 'Saving…' : isComplete ? 'Completed ✓' : 'Mark as complete'}
+            </button>
+          )}
 
           <div className="mt-10 flex items-center justify-between border-t border-gray-100 pt-4">
             {previous ? (

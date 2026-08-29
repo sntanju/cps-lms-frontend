@@ -41,6 +41,22 @@ export type Enrollment = {
   documentId: string;
   enrolledAt: string;
   course: Course;
+  progress: Progress;
+};
+
+export type Progress = {
+  completed: number;
+  total: number;
+  percentage: number;
+};
+
+export type CourseProgress = Progress & {
+  completedLessonIds: string[];
+};
+
+export type StudentProgress = Progress & {
+  student: { id: number; fullName: string; email: string };
+  enrolledAt: string;
 };
 
 export type CourseLessons = {
