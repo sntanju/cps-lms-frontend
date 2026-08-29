@@ -86,3 +86,50 @@ export type AuthoredQuiz = {
   courseDocumentId: string | null;
   questions: QuizQuestion[];
 };
+
+export type StudentQuizQuestion = {
+  id: string;
+  text: string;
+  options: string[];
+};
+
+export type StudentQuiz = {
+  id: string;
+  title: string;
+  questions: StudentQuizQuestion[];
+};
+
+export type GradedAnswer = {
+  questionId: string;
+  selectedIndex: number | null;
+  correct: boolean;
+};
+
+export type QuizAttempt = {
+  id: number;
+  documentId: string;
+  score: number;
+  totalQuestions: number;
+  submittedAt: string;
+  answers: GradedAnswer[];
+};
+
+export type MyQuizResult = {
+  id: number;
+  documentId: string;
+  score: number;
+  totalQuestions: number;
+  submittedAt: string;
+  quiz: { documentId: string; title: string } | null;
+  course: { documentId: string; title: string } | null;
+};
+
+export type CourseQuizResult = {
+  id: number;
+  documentId: string;
+  score: number;
+  totalQuestions: number;
+  submittedAt: string;
+  student: { id: number; fullName: string; email: string };
+  quiz: { documentId: string; title: string } | null;
+};

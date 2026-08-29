@@ -38,7 +38,13 @@ export default function MyCoursesPage() {
   return (
     <main className="mx-auto w-full max-w-5xl p-8">
       <h1 className="text-2xl font-semibold">My courses</h1>
-      <p className="mt-1 text-sm text-gray-600">The courses you have enrolled in.</p>
+      <p className="mt-1 text-sm text-gray-600">
+        The courses you have enrolled in.{' '}
+        <Link href="/my-results" className="underline">
+          See your quiz results
+        </Link>
+        .
+      </p>
 
       {status === 'loading' && (
         <p className="mt-6 text-sm text-gray-500">Loading…</p>

@@ -4,7 +4,8 @@ import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, readError } from '@/lib/api';
 import { ProgressBar } from '@/components/progress-bar';
-import { StudentProgress } from '@/lib/types';
+import { scoreLine } from '@/lib/quiz';
+import { CourseQuizResult, StudentProgress } from '@/lib/types';
 
 export default function CourseStudentsPage({
   params,
@@ -15,6 +16,10 @@ export default function CourseStudentsPage({
     null,
   );
   const [rows, setRows] = useState<StudentProgress[]>([]);
+
+  const [latestScores, setLatestScores] = useState<Map<number, CourseQuizResult>>(
+    new Map(),
+  );
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [error, setError] = useState('');
 
@@ -34,10 +39,31 @@ export default function CourseStudentsPage({
         setCourse(body.meta.course);
         setRows(body.data);
         setStatus('ready');
+
+        await loadQuizScores();
       } catch {
         setError('Could not reach the server. Is the backend running?');
         setStatus('failed');
       }
+    }
+
+    async function loadQuizScores() {
+      const response = await apiFetch(`/api/courses/${documentId}/quiz-results`);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const body: { data: CourseQuizResult[] } = await response.json();
+      const latest = new Map<number, CourseQuizResult>();
+
+      for (const result of body.data) {
+        if (!latest.has(result.student.id)) {
+          latest.set(result.student.id, result);
+        }
+      }
+
+      setLatestScores(latest);
     }
 
     loadStudents();
@@ -74,6 +100,7 @@ export default function CourseStudentsPage({
               <th className="py-2">Email</th>
               <th className="py-2 w-24">Lessons</th>
               <th className="py-2 w-48">Progress</th>
+              <th className="py-2 w-32">Quiz score</th>
             </tr>
           </thead>
           <tbody>
@@ -90,6 +117,14 @@ export default function CourseStudentsPage({
                     total={row.total}
                     percentage={row.percentage}
                   />
+                </td>
+                <td className="py-3 text-gray-600">
+                  {latestScores.has(row.student.id)
+                    ? scoreLine(
+                        latestScores.get(row.student.id)!.score,
+                        latestScores.get(row.student.id)!.totalQuestions,
+                      )
+                    : 'Not taken'}
                 </td>
               </tr>
             ))}

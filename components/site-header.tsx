@@ -41,9 +41,14 @@ export function SiteHeader() {
               </Link>
 
               {user.role === 'Student' && (
-                <Link href="/my-courses" className="hover:underline">
-                  My Courses
-                </Link>
+                <>
+                  <Link href="/my-courses" className="hover:underline">
+                    My Courses
+                  </Link>
+                  <Link href="/my-results" className="hover:underline">
+                    My Results
+                  </Link>
+                </>
               )}
 
               {(user.role === 'Admin' ||
