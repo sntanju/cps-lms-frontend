@@ -195,6 +195,15 @@ export default function CourseDetailPage({
         </p>
       )}
 
+      {course.coverImageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={course.coverImageUrl}
+          alt=""
+          className="mt-4 max-h-72 w-full rounded border border-gray-200 object-cover"
+        />
+      )}
+
       {course.description && (
         <p className="mt-4 whitespace-pre-wrap text-gray-700">
           {course.description}

@@ -71,35 +71,46 @@ export default function MyCoursesPage() {
           {enrollments.map((enrollment) => (
             <li
               key={enrollment.documentId}
-              className="rounded border border-gray-200 p-4"
+              className="overflow-hidden rounded border border-gray-200"
             >
-              <h2 className="font-medium">
-                <Link
-                  href={`/courses/${enrollment.course.documentId}`}
-                  className="hover:underline"
-                >
-                  {enrollment.course.title}
-                </Link>
-              </h2>
-
-              {enrollment.course.description && (
-                <p className="mt-2 line-clamp-3 text-sm text-gray-600">
-                  {enrollment.course.description}
-                </p>
-              )}
-
-              {enrollment.course.instructor && (
-                <p className="mt-3 text-xs text-gray-500">
-                  Instructor: {enrollment.course.instructor.fullName}
-                </p>
-              )}
-
-              <div className="mt-4">
-                <ProgressBar
-                  completed={enrollment.progress.completed}
-                  total={enrollment.progress.total}
-                  percentage={enrollment.progress.percentage}
+              {enrollment.course.coverImageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={enrollment.course.coverImageUrl}
+                  alt=""
+                  className="h-36 w-full object-cover"
                 />
+              )}
+
+              <div className="p-4">
+                <h2 className="font-medium">
+                  <Link
+                    href={`/courses/${enrollment.course.documentId}`}
+                    className="hover:underline"
+                  >
+                    {enrollment.course.title}
+                  </Link>
+                </h2>
+
+                {enrollment.course.description && (
+                  <p className="mt-2 line-clamp-3 text-sm text-gray-600">
+                    {enrollment.course.description}
+                  </p>
+                )}
+
+                {enrollment.course.instructor && (
+                  <p className="mt-3 text-xs text-gray-500">
+                    Instructor: {enrollment.course.instructor.fullName}
+                  </p>
+                )}
+
+                <div className="mt-4">
+                  <ProgressBar
+                    completed={enrollment.progress.completed}
+                    total={enrollment.progress.total}
+                    percentage={enrollment.progress.percentage}
+                  />
+                </div>
               </div>
             </li>
           ))}

@@ -62,28 +62,39 @@ export default function CoursesPage() {
           {courses.map((course) => (
             <li
               key={course.documentId}
-              className="rounded border border-gray-200 p-4"
+              className="overflow-hidden rounded border border-gray-200 transition-colors hover:border-gray-400"
             >
-              <h2 className="font-medium">
-                <Link
-                  href={`/courses/${course.documentId}`}
-                  className="hover:underline"
-                >
-                  {course.title}
-                </Link>
-              </h2>
-
-              {course.description && (
-                <p className="mt-2 line-clamp-3 text-sm text-gray-600">
-                  {course.description}
-                </p>
+              {course.coverImageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={course.coverImageUrl}
+                  alt=""
+                  className="h-36 w-full object-cover"
+                />
               )}
 
-              {course.instructor && (
-                <p className="mt-3 text-xs text-gray-500">
-                  Instructor: {course.instructor.fullName}
-                </p>
-              )}
+              <div className="p-4">
+                <h2 className="font-medium">
+                  <Link
+                    href={`/courses/${course.documentId}`}
+                    className="hover:underline"
+                  >
+                    {course.title}
+                  </Link>
+                </h2>
+
+                {course.description && (
+                  <p className="mt-2 line-clamp-3 text-sm text-gray-600">
+                    {course.description}
+                  </p>
+                )}
+
+                {course.instructor && (
+                  <p className="mt-3 text-xs text-gray-500">
+                    Instructor: {course.instructor.fullName}
+                  </p>
+                )}
+              </div>
             </li>
           ))}
         </ul>
