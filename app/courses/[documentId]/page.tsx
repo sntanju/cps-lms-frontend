@@ -174,6 +174,12 @@ export default function CourseDetailPage({
               Manage lessons
             </Link>
             <Link
+              href={`/manage/courses/${course.documentId}/quiz`}
+              className="rounded border border-gray-300 px-3 py-1.5 text-sm"
+            >
+              Quiz
+            </Link>
+            <Link
               href={`/manage/courses/${course.documentId}/edit`}
               className="rounded border border-gray-300 px-3 py-1.5 text-sm"
             >
@@ -239,6 +245,41 @@ export default function CourseDetailPage({
             </button>
           )}
         </div>
+      )}
+
+      {course.quiz && (
+        <section className="mt-8 rounded border border-gray-200 p-4">
+          <h2 className="text-lg font-semibold">{course.quiz.title}</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            {course.quiz.questionCount}{' '}
+            {course.quiz.questionCount === 1 ? 'question' : 'questions'}
+          </p>
+
+          
+          {isStudent && enrolled && (
+            <Link
+              href={`/courses/${course.documentId}/quiz`}
+              className="mt-3 inline-block rounded bg-black px-4 py-2 text-sm text-white"
+            >
+              Take the quiz
+            </Link>
+          )}
+
+          {isStudent && !enrolled && (
+            <p className="mt-3 text-sm text-gray-600">
+              Enrol in this course to take the quiz.
+            </p>
+          )}
+
+          {canManageCourse(user, course.instructor?.id) && (
+            <Link
+              href={`/manage/courses/${course.documentId}/quiz`}
+              className="mt-3 inline-block rounded border border-gray-300 px-3 py-1.5 text-sm"
+            >
+              Edit the quiz
+            </Link>
+          )}
+        </section>
       )}
 
       <section className="mt-8">

@@ -140,6 +140,12 @@ export default function ManageCoursesPage() {
                     Students
                   </Link>
                   <Link
+                    href={`/manage/courses/${course.documentId}/quiz`}
+                    className="mr-4 hover:underline"
+                  >
+                    Quiz
+                  </Link>
+                  <Link
                     href={`/manage/courses/${course.documentId}/edit`}
                     className="mr-4 hover:underline"
                   >

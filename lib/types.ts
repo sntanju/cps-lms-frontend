@@ -25,6 +25,7 @@ export type Course = {
   instructor: Instructor | null;
   
   lessons?: Lesson[];
+  quiz?: CourseQuiz | null;
 };
 
 
@@ -62,4 +63,26 @@ export type StudentProgress = Progress & {
 export type CourseLessons = {
   course: { documentId: string; title: string };
   lessons: Lesson[];
+};
+
+export type CourseQuiz = {
+  documentId: string;
+  title: string;
+  questionCount: number;
+};
+
+export type QuizQuestion = {
+  id: number;
+  documentId: string;
+  text: string;
+  options: string[];
+  correctIndex: number;
+};
+
+export type AuthoredQuiz = {
+  id: number;
+  documentId: string;
+  title: string;
+  courseDocumentId: string | null;
+  questions: QuizQuestion[];
 };
