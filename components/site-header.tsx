@@ -15,6 +15,11 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-4 text-sm">
       
+          {/* Readable by anyone, so it is not inside the signed-in block. */}
+          <Link href="/blog" className="hover:underline">
+            Blog
+          </Link>
+
           {status === 'loading' && <span className="text-gray-500">…</span>}
 
           {status === 'unauthenticated' && (
@@ -56,6 +61,12 @@ export function SiteHeader() {
                 user.role === 'Instructor') && (
                 <Link href="/manage/courses" className="hover:underline">
                   Manage
+                </Link>
+              )}
+
+              {(user.role === 'Admin' || user.role === 'Content Manager') && (
+                <Link href="/manage/blog" className="hover:underline">
+                  Manage blog
                 </Link>
               )}
 

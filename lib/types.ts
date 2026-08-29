@@ -133,3 +133,19 @@ export type CourseQuizResult = {
   student: { id: number; fullName: string; email: string };
   quiz: { documentId: string; title: string } | null;
 };
+
+export type BlogPostAuthor = {
+  id: number;
+  fullName: string;
+};
+
+export type BlogPost = {
+  id: number;
+  documentId: string;
+  title: string;
+  body: string;
+  coverImageUrl: string | null;
+  postStatus: 'draft' | 'published';
+  author: BlogPostAuthor | null;
+  createdAt: string;
+};

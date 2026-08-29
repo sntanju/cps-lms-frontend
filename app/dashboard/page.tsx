@@ -29,9 +29,6 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* Only the Admin sees this link. The /admin page checks the role again,
-          and Strapi checks it a third time — hiding a link is not access
-          control, it is just tidier. */}
       {user.role === 'Admin' && (
         <Link href="/admin" className="mt-6 inline-block underline">
           Admin panel

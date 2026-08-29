@@ -17,9 +17,6 @@ import {
   setTokens,
 } from '@/lib/api';
 
-// Matched by exact name, the same strings the backend seeds in src/index.ts and
-// checks in src/api/auth/services/auth.ts. Renaming a role in the Strapi admin
-// panel breaks both sides.
 export type Role = 'Admin' | 'Content Manager' | 'Instructor' | 'Student';
 
 export type AuthUser = {
@@ -29,8 +26,6 @@ export type AuthUser = {
   role: Role;
 };
 
-// What GET /api/auth/me actually returns. The role arrives as an object, so it
-// is flattened to its name below — every consumer then just compares strings.
 type MeResponse = {
   data: {
     id: number;
@@ -52,14 +47,9 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-// GET /api/auth/me rather than Strapi's /api/users/me: the stock endpoint answers
-// 200 but silently drops the role, because the content API sanitizer strips it
-// out of `populate` and no permission exists that could authorize it.
 async function fetchMe(): Promise<AuthUser | null> {
   const response = await apiFetch('/api/auth/me');
 
-  // The token is missing, expired beyond refresh, or revoked — not an error,
-  // just nobody signed in.
   if (response.status === 401 || response.status === 403) {
     return null;
   }
@@ -70,8 +60,6 @@ async function fetchMe(): Promise<AuthUser | null> {
 
   const { data }: MeResponse = await response.json();
 
-  // Every account made through registration or the seeder has a role. One without
-  // it cannot do anything here, so say so instead of rendering a broken page.
   if (!data.role) {
     throw new Error(
       'Your account has no role assigned. Contact an administrator.',
@@ -82,8 +70,6 @@ async function fetchMe(): Promise<AuthUser | null> {
     id: data.id,
     fullName: data.fullName,
     email: data.email,
-    // Cast: the database can hold roles outside the four LMS ones — Strapi's own
-    // 'Authenticated', for instance. Such a user simply matches no guard.
     role: data.role.name as Role,
   };
 }
@@ -98,9 +84,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setStatus('unauthenticated');
   }, []);
 
-  // Restores the session after a page reload: the tokens outlive the React tree,
-  // so a stored jwt means we can ask the backend who this is. An expired access
-  // token is handled transparently by apiFetch.
   useEffect(() => {
     async function restoreSession() {
       if (!getToken()) {
@@ -119,8 +102,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(me);
         setStatus('authenticated');
       } catch (error) {
-        // The backend is unreachable or broke. Surface it rather than swallow it,
-        // but still land in a defined state instead of spinning forever.
         console.error(error);
         signOutLocally();
       }
@@ -146,9 +127,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await response.json();
 
     setTokens(data.jwt, data.refreshToken);
-
-    // Login does not tell us the role: Strapi looks the user up without
-    // populating it, so the role needs this second request.
     const me = await fetchMe();
 
     if (!me) {
@@ -171,8 +149,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(await readError(response, 'Registration failed'));
       }
 
-      // The role is never sent from here. The backend hardcodes Student, because
-      // assigning roles is an Admin-only action in the permission matrix.
       await login(email, password);
     },
     [login],
@@ -188,9 +164,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ refreshToken }),
         });
 
-        // If the access token had expired, apiFetch refreshed mid-call — and a
-        // refresh rotates, so the token in the body above is already revoked and
-        // the server never ended the new session. Send the current one.
         const rotated = getRefreshToken();
 
         if (!response.ok && rotated && rotated !== refreshToken) {
@@ -201,8 +174,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (error) {
-      // Revoking the session server-side is best effort. Whatever happens, the
-      // user must end up logged out of this browser.
       console.error(error);
     } finally {
       signOutLocally();
