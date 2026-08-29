@@ -149,3 +149,26 @@ export type BlogPost = {
   author: BlogPostAuthor | null;
   createdAt: string;
 };
+
+export type AdminUser = {
+  id: number;
+  fullName: string;
+  email: string;
+  role: { id: number; name: string } | null;
+  createdAt: string;
+};
+
+export type AdminRole = {
+  id: number;
+  name: string;
+  description: string | null;
+};
+
+export type PlatformStats = {
+  usersByRole: { role: string; count: number }[];
+  totalUsers: number;
+  totalCourses: number;
+  totalLessons: number;
+  totalEnrollments: number;
+  totalBlogPosts: number;
+};
